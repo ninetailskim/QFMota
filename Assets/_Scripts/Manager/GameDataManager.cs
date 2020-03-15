@@ -1,13 +1,19 @@
 ﻿using UnityEngine;
 using Rotorz.Tile;
+using QFramework;
+
 namespace Mota
 {
-    public class GameDataManager : MonoBehaviour
+    public class GameDataManager : MonoBehaviour, ISingleton
     {
-
+        public static GameDataManager Instance {
+            get
+            {
+                return MonoSingletonProperty<GameDataManager>.Instance;
+            }
+        }
         public int[][,] sceneData = new int[22][,];
 
-        private PlayerAttributes PA;
         private GameManager GM;
         private DialogManager DM;
         public bool hasCundang = false;
@@ -15,7 +21,6 @@ namespace Mota
         void initComponent()
         {
             GameObject player = GameObject.Find("Player").gameObject;
-            PA = player.GetComponent<PlayerAttributes>();
             GM = this.GetComponent<GameManager>();
             DM = this.GetComponent<DialogManager>();
         }
@@ -54,18 +59,18 @@ namespace Mota
         {
             using (ES2Writer writer = ES2Writer.Create("player"))
             {
-                writer.Write(PA._dengji, "dengji");
-                writer.Write(PA._jinbi, "jinbi");
-                writer.Write(PA._jingyan, "jingyan");
-                writer.Write(PA._shengming, "shengming");
-                writer.Write(PA._gongji, "gongji");
-                writer.Write(PA._fangyu, "fangyu");
-                writer.Write(PA._key_yellow, "key_yellow");
-                writer.Write(PA._key_blue, "key_blue");
-                writer.Write(PA._key_red, "key_red");
-                writer.Write(PA._daoju_tujian, "daoju_tujian");
-                writer.Write(PA._daoju_feixing, "daoju_feixing");
-                writer.Write(GM.maxFloor, "maxFloor");
+                writer.Write(PlayerInfo.Instance.Data.Level, "dengji");
+                writer.Write(PlayerInfo.Instance.Data.Gold, "jinbi");
+                writer.Write(PlayerInfo.Instance.Data.Experience, "jingyan");
+                writer.Write(PlayerInfo.Instance.Data.Life, "shengming");
+                writer.Write(PlayerInfo.Instance.Data.Attack, "gongji");
+                writer.Write(PlayerInfo.Instance.Data.Defence, "fangyu");
+                writer.Write(PlayerInfo.Instance.Data.KeyYellow, "key_yellow");
+                writer.Write(PlayerInfo.Instance.Data.KeyBlue, "key_blue");
+                writer.Write(PlayerInfo.Instance.Data.KeyRed, "key_red");
+                writer.Write(PlayerInfo.Instance.Data.HandBook, "daoju_tujian");
+                writer.Write(PlayerInfo.Instance.Data.Fly, "daoju_feixing");
+                writer.Write(GM.MaxFloor.Value, "maxFloor");
                 writer.Write(Dialoguer.GetGlobalBoolean(0), "hasJinglingTalked");
                 writer.Write(Dialoguer.GetGlobalBoolean(1), "hasDaozeiTalked");
                 writer.Write(Dialoguer.GetGlobalBoolean(2), "hasGoodJian");
@@ -75,7 +80,7 @@ namespace Mota
                 writer.Save();
             }
 #if UNITY_WP8
-        for (int i = 0; i < GM.maxFloor + 1; i++)
+        for (int i = 0; i < GM.MaxFloor + 1; i++)
         {
             using (ES2Writer writer = ES2Writer.Create("floor" + i))
             {
@@ -90,7 +95,7 @@ namespace Mota
             }
         }
 #else
-            for (int i = 0; i < GM.maxFloor + 1; i++)
+            for (int i = 0; i < GM.MaxFloor.Value + 1; i++)
             {
                 ES2.Save(sceneData[i], "floor" + i);
             }
@@ -104,18 +109,18 @@ namespace Mota
         {
             using (ES2Reader reader = ES2Reader.Create("player"))
             {
-                PA._dengji = reader.Read<int>("dengji");
-                PA._jinbi = reader.Read<int>("jinbi");
-                PA._jingyan = reader.Read<int>("jingyan");
-                PA._shengming = reader.Read<int>("shengming");
-                PA._gongji = reader.Read<int>("gongji");
-                PA._fangyu = reader.Read<int>("fangyu");
-                PA._key_yellow = reader.Read<int>("key_yellow");
-                PA._key_blue = reader.Read<int>("key_blue");
-                PA._key_red = reader.Read<int>("key_red");
-                PA._daoju_tujian = reader.Read<bool>("daoju_tujian");
-                PA._daoju_feixing = reader.Read<bool>("daoju_feixing");
-                GM.maxFloor = reader.Read<int>("maxFloor");
+                PlayerInfo.Instance.Data.Level.Value = reader.Read<int>("dengji");
+                PlayerInfo.Instance.Data.Gold.Value = reader.Read<int>("jinbi");
+                PlayerInfo.Instance.Data.Experience.Value = reader.Read<int>("jingyan");
+                PlayerInfo.Instance.Data.Life.Value = reader.Read<int>("shengming");
+                PlayerInfo.Instance.Data.Attack.Value = reader.Read<int>("gongji");
+                PlayerInfo.Instance.Data.Defence.Value = reader.Read<int>("fangyu");
+                PlayerInfo.Instance.Data.KeyYellow.Value = reader.Read<int>("key_yellow");
+                PlayerInfo.Instance.Data.KeyBlue.Value = reader.Read<int>("key_blue");
+                PlayerInfo.Instance.Data.KeyRed.Value = reader.Read<int>("key_red");
+                PlayerInfo.Instance.Data.HandBook.Value = reader.Read<bool>("daoju_tujian");
+                PlayerInfo.Instance.Data.Fly.Value = reader.Read<bool>("daoju_feixing");
+                GM.MaxFloor.Value = reader.Read<int>("maxFloor");
                 Dialoguer.SetGlobalBoolean(0, reader.Read<bool>("hasJinglingTalked"));
                 Dialoguer.SetGlobalBoolean(1, reader.Read<bool>("hasDaozeiTalked"));
                 Dialoguer.SetGlobalBoolean(2, reader.Read<bool>("hasGoodJian"));
@@ -124,7 +129,7 @@ namespace Mota
                 Dialoguer.SetGlobalBoolean(5, reader.Read<bool>("hasGangDun"));
             }
 #if UNITY_WP8
-        for (int i = 0; i < GM.maxFloor + 1; i++)
+        for (int i = 0; i < GM.MaxFloor + 1; i++)
         {
             GM.floorGO[i].SetActive(true);
             using (ES2Reader reader = ES2Reader.Create("floor" + i))
@@ -155,7 +160,7 @@ namespace Mota
             GM.floorGO[i].SetActive(false);
         }
 #else
-            for (int i = 0; i < GM.maxFloor + 1; i++)
+            for (int i = 0; i < GM.MaxFloor.Value + 1; i++)
             {
                 GM.floorGO[i].SetActive(true);
                 sceneData[i] = ES2.Load2DArray<int>("floor" + i);
@@ -195,6 +200,11 @@ namespace Mota
             {
                 return false;
             }
+        }
+
+        public void OnSingletonInit()
+        {
+            
         }
     }
 }

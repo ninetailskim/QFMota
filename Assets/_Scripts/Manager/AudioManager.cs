@@ -1,11 +1,18 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-
+using QFramework;
 namespace Mota
 {
-    public class AudioManager : MonoBehaviour
+    public class AudioManager : MonoBehaviour,ISingleton
     {
-        public Image audioButtonImage;
+        public static AudioManager Instance
+        {
+            get
+            {
+                return MonoSingletonProperty<AudioManager>.Instance;
+            }
+        }
+
         public Sprite sound_on;
         public Sprite sound_off;
 
@@ -57,14 +64,19 @@ namespace Mota
             {
                 gameAudio.mute = false;
                 playerAudio.mute = false;
-                audioButtonImage.sprite = sound_on;
+                PlayerInfo.Instance.AudioImage.sprite = sound_on;
             }
             else
             {
                 gameAudio.mute = true;
                 playerAudio.mute = true;
-                audioButtonImage.sprite = sound_off;
+                PlayerInfo.Instance.AudioImage.sprite = sound_off;
             }
+        }
+
+        public void OnSingletonInit()
+        {
+            
         }
     }
 }

@@ -2,14 +2,23 @@
 using UnityEngine.UI;
 using System.Collections;
 using Holoville.HOTween;
+using QFramework;
+
 using Rotorz.Tile;
 
 namespace Mota
 {
-    public class DialogManager : MonoBehaviour
+    public class DialogManager : MonoBehaviour, ISingleton
     {
+
+        public static DialogManager Instance
+        {
+            get
+            {
+                return MonoSingletonProperty<DialogManager>.Instance;
+            }
+        }
         //常用组件
-        private PlayerAttributes PA;
         private GameManager GM;
         private GameDataManager GDM;
         private TileManager TM;
@@ -41,7 +50,6 @@ namespace Mota
             TM = this.GetComponent<TileManager>();
             AuM = this.GetComponent<AudioManager>();
             player = GameObject.Find("Player").gameObject.GetComponent<Player>();
-            PA = player.gameObject.GetComponent<PlayerAttributes>();
             displayScale = Screen.width / 400f;
             //注册Dialogure事件
             Dialoguer.events.onStarted += onStarted;
@@ -56,11 +64,11 @@ namespace Mota
         }
         void Update()
         {
-            Dialoguer.SetGlobalFloat(0, PA._jinbi);
-            Dialoguer.SetGlobalFloat(1, PA._jingyan);
-            Dialoguer.SetGlobalFloat(2, PA._key_yellow);
-            Dialoguer.SetGlobalFloat(3, PA._key_blue);
-            Dialoguer.SetGlobalFloat(4, PA._key_red);
+            Dialoguer.SetGlobalFloat(0, PlayerInfo.Instance.Data.Gold.Value);
+            Dialoguer.SetGlobalFloat(1, PlayerInfo.Instance.Data.Experience.Value);
+            Dialoguer.SetGlobalFloat(2, PlayerInfo.Instance.Data.KeyYellow.Value);
+            Dialoguer.SetGlobalFloat(3, PlayerInfo.Instance.Data.KeyBlue.Value);
+            Dialoguer.SetGlobalFloat(4, PlayerInfo.Instance.Data.KeyRed.Value);
         }
         void OnGUI()
         {
@@ -108,7 +116,7 @@ namespace Mota
                         GUI.skin.box.alignment = TextAnchor.MiddleCenter;
                         GUI.skin.box.normal.background = dialogboxbg;
                         dialogbox = new Rect(Screen.width / 2 - scaleGUI(100), Screen.height / 2 - scaleGUI(30), scaleGUI(200), scaleGUI(60));
-                        GUI.Box(dialogbox, "当前第 " + GM.currentFloor + " 层");
+                        GUI.Box(dialogbox, "当前第 " + GM.CurrentFloor.Value + " 层");
                     }
                     else
                     {
@@ -163,18 +171,18 @@ namespace Mota
                             string info = "";
                             if (!tile.GetUserFlag(10))
                             {
-                                if (PA._gongji <= guaiwu.fangyu)
+                                if (PlayerInfo.Instance.Data.Attack.Value <= guaiwu.fangyu)
                                 {
                                     info = "你破不了它的防御。\n";
                                 }
                                 else
                                 {
-                                    int shanghai = PA._gongji - guaiwu.fangyu;
+                                    int shanghai = PlayerInfo.Instance.Data.Attack.Value - guaiwu.fangyu;
                                     float cishu = Mathf.Ceil(guaiwu.shengming / shanghai);
                                     float zongshanghai = 0;
-                                    if (guaiwu.gongji > PA._fangyu)
+                                    if (guaiwu.gongji > PlayerInfo.Instance.Data.Defence.Value)
                                     {
-                                        float shoushang = guaiwu.gongji - PA._fangyu;
+                                        float shoushang = guaiwu.gongji - PlayerInfo.Instance.Data.Defence.Value;
                                         zongshanghai = shoushang * cishu;
                                     }
                                     info = "战胜它你将损失：" + zongshanghai + "生命。\n";
@@ -200,7 +208,7 @@ namespace Mota
                     break;
                 case "feixing":
                     player.canMove = false;
-                    for (int i = 1; i < GM.maxFloor + 1; i++)
+                    for (int i = 1; i < GM.MaxFloor.Value + 1; i++)
                     {
                         int y = i % 3;
                         if (y == 0) { y = -1; } else if (y == 2) { y = 0; }
@@ -283,9 +291,9 @@ namespace Mota
             switch (message)
             {
                 case "dialog_jingling_over1":
-                    PA._key_yellow += 1;
-                    PA._key_blue += 1;
-                    PA._key_red += 1;
+                    PlayerInfo.Instance.Data.KeyYellow.Value += 1;
+                    PlayerInfo.Instance.Data.KeyBlue.Value += 1;
+                    PlayerInfo.Instance.Data.KeyRed.Value += 1;
                     tipContent = "各颜色钥匙+1";
                     tipTime = 3;
                     break;
@@ -300,59 +308,56 @@ namespace Mota
                 case "jia_shengming":
                     if (!pressed)
                     {
-                        PA._shengming += int.Parse(metadata);
+                        PlayerInfo.Instance.Data.Life.Value += int.Parse(metadata);
                     }
                     break;
                 case "jia_gongji":
                     if (!pressed)
                     {
-                        PA._gongji += int.Parse(metadata);
+                        PlayerInfo.Instance.Data.Attack.Value += int.Parse(metadata);
                     }
                     break;
                 case "jia_fangyu":
                     if (!pressed)
                     {
-                        PA._fangyu += int.Parse(metadata);
+                        PlayerInfo.Instance.Data.Defence.Value += int.Parse(metadata);
                     }
                     break;
                 case "jia_dengji":
                     if (!pressed)
                     {
-                        PA._dengji += int.Parse(metadata);
-                        PA._gongji += int.Parse(metadata) * 5;
-                        PA._fangyu += int.Parse(metadata) * 5;
-                        PA._shengming += int.Parse(metadata) * 600;
+                        PlayerInfo.Instance.Data.LevelUp(int.Parse(metadata));
                     }
                     break;
                 case "jia_key_yellow":
                     if (!pressed)
                     {
-                        PA._key_yellow += int.Parse(metadata);
+                        PlayerInfo.Instance.Data.KeyYellow.Value += int.Parse(metadata);
                     }
                     break;
                 case "jia_key_blue":
                     if (!pressed)
                     {
-                        PA._key_blue += int.Parse(metadata);
+                        PlayerInfo.Instance.Data.KeyBlue.Value += int.Parse(metadata);
                     }
                     break;
                 case "jia_key_red":
                     if (!pressed)
                     {
-                        PA._key_red += int.Parse(metadata);
+                        PlayerInfo.Instance.Data.KeyRed.Value += int.Parse(metadata);
                     }
                     break;
                 case "jian_jingyan":
                     if (!pressed)
                     {
-                        PA._jingyan -= int.Parse(metadata);
+                        PlayerInfo.Instance.Data.Experience.Value -= int.Parse(metadata);
                         pressed = true;
                     }
                     break;
                 case "jian_jinbi":
                     if (!pressed)
                     {
-                        PA._jinbi -= int.Parse(metadata);
+                        PlayerInfo.Instance.Data.Gold.Value -= int.Parse(metadata);
                         pressed = true;
                     }
                     break;
@@ -381,6 +386,11 @@ namespace Mota
         public void showMenu()
         {
             state = "menu";
+        }
+
+        public void OnSingletonInit()
+        {
+            
         }
     }
 }

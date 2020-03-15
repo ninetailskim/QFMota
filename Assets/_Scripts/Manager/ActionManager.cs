@@ -1,202 +1,183 @@
 ﻿using UnityEngine;
 using Rotorz.Tile;
+using UniRx;
 namespace Mota
 {
     public class ActionManager : MonoBehaviour
     {
-
-        private AudioManager AuM;
-        private PlayerAttributes PA;
-        private GameDataManager GDM;
-        private GameManager GM;
-        private DialogManager DM;
-
         void Start()
         {
-            GameObject player = GameObject.Find("Player").gameObject;
-            PA = player.GetComponent<PlayerAttributes>();
-            AuM = this.GetComponent<AudioManager>();
-            GM = this.GetComponent<GameManager>();
-            GDM = this.GetComponent<GameDataManager>();
-            DM = this.GetComponent<DialogManager>();
+            GameObject player = GameObject.Find("Player").gameObject;  
         }
         public void talk(int x, int y, TileData otherTileData)
         {
-            AuM.playAudio("talk");
+            AudioManager.Instance.playAudio("talk");
             Talk talk = otherTileData.gameObject.GetComponent<Talk>();
             Dialoguer.StartDialogue(talk.dialogureID);
         }
         public void daoju(int x, int y, TileData otherTileData)
         {
-            AuM.playAudio("daoju");
-            Daoju daoju = otherTileData.gameObject.GetComponent<Daoju>();
-            PA._gongji += daoju.gongji;
-            PA._fangyu += daoju.fangyu;
-            PA._shengming += daoju.shengming;
-            PA._jinbi += daoju.jinbi;
-            PA._dengji += daoju.dengji;
-            PA._gongji += daoju.dengji * 7;
-            PA._fangyu += daoju.dengji * 7;
-            PA._shengming += daoju.dengji * 600;
-            DM.tipContent = daoju.tip;
-            DM.tipTime = 3f;
-            GameObject.Destroy(daoju.gameObject);
+            
+            otherTileData.gameObject.GetComponent<Daoju>()
+                        .Execute();
+            
+            //GameObject.Destroy(otherTileData.gameObject.GetComponent<Daoju>().gameObject);
             otherTileData.Clear();
-            GDM.sceneData[GM.currentFloor][x, y] = 1;
+            GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
         }
         public void guaiwu(int x, int y, TileData otherTileData)
         {
             Guaiwu guaiwu = otherTileData.gameObject.GetComponent<Guaiwu>();
-            DM.infoDabuguo = "你打不过他。\n\n";
-            DM.infoDabuguo += "怪物属性：\n";
-            DM.infoDabuguo += "生命：" + guaiwu.shengming + "\n";
-            DM.infoDabuguo += "攻击：" + guaiwu.gongji + "\n";
-            DM.infoDabuguo += "防御：" + guaiwu.fangyu + "\n";
-            DM.infoDabuguo += "金币：" + guaiwu.jinbi + "\n";
-            DM.infoDabuguo += "经验：" + guaiwu.jingyan + "\n";
-            if (PA._gongji <= guaiwu.fangyu)
+            DialogManager.Instance.infoDabuguo = "你打不过他。\n\n";
+            DialogManager.Instance.infoDabuguo += "怪物属性：\n";
+            DialogManager.Instance.infoDabuguo += "生命：" + guaiwu.shengming + "\n";
+            DialogManager.Instance.infoDabuguo += "攻击：" + guaiwu.gongji + "\n";
+            DialogManager.Instance.infoDabuguo += "防御：" + guaiwu.fangyu + "\n";
+            DialogManager.Instance.infoDabuguo += "金币：" + guaiwu.jinbi + "\n";
+            DialogManager.Instance.infoDabuguo += "经验：" + guaiwu.jingyan + "\n";
+            if (PlayerInfo.Instance.Data.Attack.Value <= guaiwu.fangyu)
             {
-                DM.state = "dabuguo";
+                DialogManager.Instance.state = "dabuguo";
             }
             else
             {
-                int shanghai = PA._gongji - guaiwu.fangyu;
+                int shanghai = PlayerInfo.Instance.Data.Attack.Value - guaiwu.fangyu;
                 float cishu = Mathf.Ceil(guaiwu.shengming / shanghai);
                 float zongshanghai = 0;
-                if (guaiwu.gongji > PA._fangyu)
+                if (guaiwu.gongji > PlayerInfo.Instance.Data.Defence.Value)
                 {
-                    float shoushang = guaiwu.gongji - PA._fangyu;
+                    float shoushang = guaiwu.gongji - PlayerInfo.Instance.Data.Defence.Value;
                     zongshanghai = shoushang * cishu;
                 }
-                if (zongshanghai >= PA._shengming)
+                if (zongshanghai >= PlayerInfo.Instance.Data.Life.Value)
                 {
-                    DM.state = "dabuguo";
+                    DialogManager.Instance.state = "dabuguo";
                 }
                 else
                 {
-                    AuM.playAudio("fight");
-                    PA._shengming -= (int)zongshanghai;
-                    PA._jingyan += guaiwu.jingyan;
-                    PA._jinbi += guaiwu.jinbi;
-                    DM.tipContent = "经验+" + guaiwu.jingyan + "，金币+" + guaiwu.jinbi;
-                    DM.tipTime = 3f;
+                    AudioManager.Instance.playAudio("fight");
+                    PlayerInfo.Instance.Data.Life.Value -= (int)zongshanghai;
+                    PlayerInfo.Instance.Data.Experience.Value += guaiwu.jingyan;
+                    PlayerInfo.Instance.Data.Gold.Value += guaiwu.jinbi;
+                    DialogManager.Instance.tipContent = "经验+" + guaiwu.jingyan + "，金币+" + guaiwu.jinbi;
+                    DialogManager.Instance.tipTime = 3f;
                     GameObject.Destroy(guaiwu.gameObject);
                     if (otherTileData.GetUserFlag(9))
                     {
                         Application.LoadLevel(2);
                     }
                     otherTileData.Clear();
-                    GDM.sceneData[GM.currentFloor][x, y] = 1;
+                    GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
                 }
             }
         }
         public void door(int x, int y, TileData otherTileData)
         {
             TRAnimation door = otherTileData.gameObject.GetComponent<TRAnimation>();
-            if (PA._key_yellow > 0 && door.currentIndex == 1)
+            if (PlayerInfo.Instance.Data.KeyYellow.Value > 0 && door.currentIndex == 1)
             {
-                AuM.playAudio("door");
+                AudioManager.Instance.playAudio("door");
                 GameObject.Destroy(door.gameObject);
                 otherTileData.Clear();
-                GDM.sceneData[GM.currentFloor][x, y] = 1;
-                PA._key_yellow -= 1;
-                DM.tipContent = "黄钥匙-1";
-                DM.tipTime = 3f;
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
+                PlayerInfo.Instance.Data.KeyYellow.Value -= 1;
+                DialogManager.Instance.tipContent = "黄钥匙-1";
+                DialogManager.Instance.tipTime = 3f;
             }
-            if (PA._key_blue > 0 && door.currentIndex == 2)
+            if (PlayerInfo.Instance.Data.KeyBlue.Value > 0 && door.currentIndex == 2)
             {
-                AuM.playAudio("door");
+                AudioManager.Instance.playAudio("door");
                 GameObject.Destroy(door.gameObject);
                 otherTileData.Clear();
-                GDM.sceneData[GM.currentFloor][x, y] = 1;
-                PA._key_blue -= 1;
-                DM.tipContent = "蓝钥匙-1";
-                DM.tipTime = 3f;
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
+                PlayerInfo.Instance.Data.KeyBlue.Value -= 1;
+                DialogManager.Instance.tipContent = "蓝钥匙-1";
+                DialogManager.Instance.tipTime = 3f;
             }
-            if (PA._key_red > 0 && door.currentIndex == 3)
+            if (PlayerInfo.Instance.Data.KeyRed.Value > 0 && door.currentIndex == 3)
             {
-                AuM.playAudio("door");
+                AudioManager.Instance.playAudio("door");
                 GameObject.Destroy(door.gameObject);
                 otherTileData.Clear();
-                GDM.sceneData[GM.currentFloor][x, y] = 1;
-                PA._key_red -= 1;
-                DM.tipContent = "红钥匙-1";
-                DM.tipTime = 3f;
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
+                PlayerInfo.Instance.Data.KeyRed.Value -= 1;
+                DialogManager.Instance.tipContent = "红钥匙-1";
+                DialogManager.Instance.tipTime = 3f;
             }
             if (door.spriteTexture.name == "door-02")
             {
-                AuM.playAudio("door");
+                AudioManager.Instance.playAudio("door");
                 GameObject.Destroy(door.gameObject);
                 otherTileData.Clear();
-                GDM.sceneData[GM.currentFloor][x, y] = 1;
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
             }
         }
         public void key(int x, int y, TileData otherTileData)
         {
-            AuM.playAudio("daoju");
+            AudioManager.Instance.playAudio("daoju");
             Key key = otherTileData.gameObject.GetComponent<Key>();
-            PA._key_yellow += key.key_yellow;
-            PA._key_blue += key.key_blue;
-            PA._key_red += key.key_red;
-            DM.tipContent = key.tip;
-            DM.tipTime = 3f;
+            PlayerInfo.Instance.Data.KeyYellow.Value += key.key_yellow;
+            PlayerInfo.Instance.Data.KeyBlue.Value += key.key_blue;
+            PlayerInfo.Instance.Data.KeyRed.Value += key.key_red;
+            DialogManager.Instance.tipContent = key.tip;
+            DialogManager.Instance.tipTime = 3f;
             GameObject.Destroy(key.gameObject);
             otherTileData.Clear();
-            GDM.sceneData[GM.currentFloor][x, y] = 1;
+            GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
         }
         public void stair(int x, int y, TileData otherTileData)
         {
-            AuM.playAudio("door");
+            AudioManager.Instance.playAudio("door");
             Stair stair = otherTileData.gameObject.GetComponent<Stair>();
-            GM.changeFloor(stair.floor);
+            GameManager.Instance.changeFloor(stair.floor);
         }
         public void feixing(int x, int y, TileData otherTileData)
         {
-            AuM.playAudio("daoju");
-            DM.tipContent = "开启“传送”，可传送到其他楼层";
-            DM.tipTime = 3f;
-            PA._daoju_feixing = true;
+            AudioManager.Instance.playAudio("daoju");
+            DialogManager.Instance.tipContent = "开启“传送”，可传送到其他楼层";
+            DialogManager.Instance.tipTime = 3f;
+            PlayerInfo.Instance.Data.Fly.Value = true;
             GameObject.Destroy(otherTileData.gameObject);
             otherTileData.Clear();
-            GDM.sceneData[GM.currentFloor][x, y] = 1;
+            GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
         }
         public void tujian(int x, int y, TileData otherTileData)
         {
-            AuM.playAudio("daoju");
-            DM.tipContent = "开启“图鉴”，开启后可点击怪物查看信息";
-            DM.tipTime = 3f;
-            PA._daoju_tujian = true;
+            AudioManager.Instance.playAudio("daoju");
+            DialogManager.Instance.tipContent = "开启“图鉴”，开启后可点击怪物查看信息";
+            DialogManager.Instance.tipTime = 3f;
+            PlayerInfo.Instance.Data.HandBook.Value = true;
             GameObject.Destroy(otherTileData.gameObject);
             otherTileData.Clear();
-            GDM.sceneData[GM.currentFloor][x, y] = 1;
+            GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
         }
         public void boss(int x, int y, TileData otherTileData)
         {
             Guaiwu guaiwu = otherTileData.gameObject.GetComponent<Guaiwu>();
-            DM.infoDabuguo = "你打不过他。\n\n";
-            DM.infoDabuguo += "怪物属性：\n";
-            DM.infoDabuguo += "生命：" + guaiwu.shengming + "\n";
-            DM.infoDabuguo += "攻击：" + guaiwu.gongji + "\n";
-            DM.infoDabuguo += "防御：" + guaiwu.fangyu + "\n";
-            DM.infoDabuguo += "金币：" + guaiwu.jinbi + "\n";
-            DM.infoDabuguo += "经验：" + guaiwu.jingyan + "\n";
-            if (PA._gongji <= guaiwu.fangyu)
+            DialogManager.Instance.infoDabuguo = "你打不过他。\n\n";
+            DialogManager.Instance.infoDabuguo += "怪物属性：\n";
+            DialogManager.Instance.infoDabuguo += "生命：" + guaiwu.shengming + "\n";
+            DialogManager.Instance.infoDabuguo += "攻击：" + guaiwu.gongji + "\n";
+            DialogManager.Instance.infoDabuguo += "防御：" + guaiwu.fangyu + "\n";
+            DialogManager.Instance.infoDabuguo += "金币：" + guaiwu.jinbi + "\n";
+            DialogManager.Instance.infoDabuguo += "经验：" + guaiwu.jingyan + "\n";
+            if (PlayerInfo.Instance.Data.Attack.Value <= guaiwu.fangyu)
             {
-                DM.state = "dabuguo";
+                DialogManager.Instance.state = "dabuguo";
             }
             else
             {
-                int shanghai = PA._gongji - guaiwu.fangyu;
+                int shanghai = PlayerInfo.Instance.Data.Attack.Value - guaiwu.fangyu;
                 float cishu = Mathf.Ceil(guaiwu.shengming / shanghai);
                 float zongshanghai = 0;
-                if (guaiwu.gongji > PA._fangyu)
+                if (guaiwu.gongji > PlayerInfo.Instance.Data.Defence.Value)
                 {
-                    float shoushang = guaiwu.gongji - PA._fangyu;
+                    float shoushang = guaiwu.gongji - PlayerInfo.Instance.Data.Defence.Value;
                     zongshanghai = shoushang * cishu;
                 }
-                if (zongshanghai >= PA._shengming)
+                if (zongshanghai >= PlayerInfo.Instance.Data.Life.Value)
                 {
-                    DM.state = "dabuguo";
+                    DialogManager.Instance.state = "dabuguo";
                 }
                 else
                 {

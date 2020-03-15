@@ -1,19 +1,28 @@
 ﻿using UnityEngine;
 using Rotorz.Tile;
+using QFramework;
+using UniRx;
+
+
 namespace Mota
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : MonoBehaviour, ISingleton
     {
 
-        public int currentFloor = 0;
-        public int maxFloor = 0;
+        public static GameManager Instance {
+            get {
+                return MonoSingletonProperty<GameManager>.Instance;
+            }
+        }
+
+        public IntReactiveProperty CurrentFloor = new IntReactiveProperty(0);
+        public IntReactiveProperty MaxFloor = new IntReactiveProperty(0);
         public GameObject globalGameObject;
         public GameObject[] floorGO;
 
         private TileManager TM;
         private DialogManager DM;
         private GameDataManager GDM;
-        private PlayerAttributes PA;
         private Transform playerTransform;
 
         void Start()
@@ -22,13 +31,12 @@ namespace Mota
             TM = this.GetComponent<TileManager>();
             DM = this.GetComponent<DialogManager>();
             GDM = this.GetComponent<GameDataManager>();
-            PA = player.GetComponent<PlayerAttributes>();
             playerTransform = player.transform;
         }
 
         public void changeFloor(int floor, bool checkUpDown = true)
         {
-            if (currentFloor != floor)
+            if (CurrentFloor.Value != floor)
             {
                 floorGO[floor].SetActive(true);
                 //摄像机位置
@@ -37,26 +45,26 @@ namespace Mota
                 globalGameObject.transform.position = gGOPosition;
                 if (checkUpDown)
                 {
-                    if (currentFloor < floor)
+                    if (CurrentFloor.Value < floor)
                     {
-                        playerTransform.position = PA.getPlayerPositionUp(floor);
+                        playerTransform.position = PlayerInfo.Instance.Data.GetPlayerPositionUp(floor);
                     }
                     else
                     {
-                        playerTransform.position = PA.getPlayerPositionDown(floor);
+                        playerTransform.position = PlayerInfo.Instance.Data.GetPlayerPositionDown(floor);
                     }
                 }
                 else
                 {
-                    playerTransform.position = PA.getPlayerPositionUp(floor);
+                    playerTransform.position = PlayerInfo.Instance.Data.GetPlayerPositionUp(floor);
                 }
-                floorGO[currentFloor].SetActive(false);
-                currentFloor = floor;
-                if (currentFloor > maxFloor)
+                floorGO[CurrentFloor.Value].SetActive(false);
+                CurrentFloor.Value = floor;
+                if (CurrentFloor.Value > MaxFloor.Value)
                 {
-                    maxFloor = currentFloor;
+                    MaxFloor.Value = CurrentFloor.Value;
                 }
-                TM.tileSystem = floorGO[currentFloor].GetComponent<TileSystem>();
+                TM.tileSystem = floorGO[CurrentFloor.Value].GetComponent<TileSystem>();
                 DM.dialogTime = 3;
                 DM.state = "floorchange";
             }
@@ -96,6 +104,11 @@ namespace Mota
                 DM.tipContent = "已帮你打开2楼的门，修正错误，非常抱歉！";
                 DM.tipTime = 6;
             }
+        }
+
+        public void OnSingletonInit()
+        {
+            
         }
     }
 }

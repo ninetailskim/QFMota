@@ -17,7 +17,7 @@ namespace Mota
         {
             GM = this.GetComponent<GameManager>();
             AM = this.GetComponent<ActionManager>();
-            tileSystem = GameObject.Find("Floor" + GM.currentFloor).gameObject.GetComponent<TileSystem>();
+            tileSystem = GameObject.Find("Floor" + GM.CurrentFloor.Value).gameObject.GetComponent<TileSystem>();
         }
 
         public bool checkTile(string arrow)
