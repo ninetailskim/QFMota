@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 using QFramework;
+using Rotorz.Tile;
 
 namespace Mota
 {
-    public class Daoju : MonoBehaviour
+    public class Daoju : MonoBehaviour, ICommand
     {
         //攻击，防御，生命，金币，等级，提示
         public int gongji;
@@ -13,7 +14,7 @@ namespace Mota
         public int dengji;
         public string tip;
 
-        public void Execute()
+        public void Execute(int x, int y, TileData otherTileData)
         {
             AudioManager.Instance.playAudio("daoju");
             PlayerInfo.Instance.Data.Attack.Value += gongji;
@@ -25,10 +26,13 @@ namespace Mota
             PlayerInfo.Instance.Data.Defence.Value += dengji * 7;
             PlayerInfo.Instance.Data.Life.Value += dengji * 600;
 
-            DialogManager.Instance.tipContent = daoju.tip;
+            DialogManager.Instance.tipContent = tip;
             DialogManager.Instance.tipTime = 3f;
 
             this.DestroyGameObj();
+
+            otherTileData.Clear();
+            GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
         }
     }
 }

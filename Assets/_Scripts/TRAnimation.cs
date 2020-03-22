@@ -1,9 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Rotorz.Tile;
+using QFramework;
+
 namespace Mota
 {
-    public class TRAnimation : MonoBehaviour
+    public class TRAnimation : MonoBehaviour, ICommand
     {
 
         public Texture2D spriteTexture;
@@ -92,5 +95,46 @@ namespace Mota
             }
         }
 
+        public void Execute(int x, int y, TileData otherTileData)
+        {
+            
+            if (PlayerInfo.Instance.Data.KeyYellow.Value > 0 && currentIndex == 1)
+            {
+                AudioManager.Instance.playAudio("door");
+                this.DestroyGameObj();
+                otherTileData.Clear();
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
+                PlayerInfo.Instance.Data.KeyYellow.Value -= 1;
+                DialogManager.Instance.tipContent = "黄钥匙-1";
+                DialogManager.Instance.tipTime = 3f;
+            }
+            if (PlayerInfo.Instance.Data.KeyBlue.Value > 0 && currentIndex == 2)
+            {
+                AudioManager.Instance.playAudio("door");
+                this.DestroyGameObj();
+                otherTileData.Clear();
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
+                PlayerInfo.Instance.Data.KeyBlue.Value -= 1;
+                DialogManager.Instance.tipContent = "蓝钥匙-1";
+                DialogManager.Instance.tipTime = 3f;
+            }
+            if (PlayerInfo.Instance.Data.KeyRed.Value > 0 && currentIndex == 3)
+            {
+                AudioManager.Instance.playAudio("door");
+                this.DestroyGameObj();
+                otherTileData.Clear();
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
+                PlayerInfo.Instance.Data.KeyRed.Value -= 1;
+                DialogManager.Instance.tipContent = "红钥匙-1";
+                DialogManager.Instance.tipTime = 3f;
+            }
+            if (spriteTexture.name == "door-02")
+            {
+                AudioManager.Instance.playAudio("door");
+                this.DestroyGameObj();
+                otherTileData.Clear();
+                GameDataManager.Instance.sceneData[GameManager.Instance.CurrentFloor.Value][x, y] = 1;
+            }
+        }
     }
 }

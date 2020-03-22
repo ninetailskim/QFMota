@@ -49,7 +49,9 @@ namespace Mota
         public Image AudioImage;
 
         public Button BtnHandbook;
-        public Button BtnFly;                                        
+        public Button BtnFly;
+        public Button BtnArchives;
+        public Button BtnAudio;
 
         // Start is called before the first frame update
 
@@ -78,6 +80,8 @@ namespace Mota
 
             BtnHandbook = transform.Find("Button_tujian").GetComponent<Button>();
             BtnFly = transform.Find("Button_feixing").GetComponent<Button>();
+            BtnArchives = transform.Find("Button_dangan").GetComponent<Button>();
+            BtnAudio = transform.Find("Button_shengyin").GetComponent<Button>();
 
         }
 
@@ -105,6 +109,26 @@ namespace Mota
             {
                 BtnFly.enabled = on;
                 FlyImage.color = on ? new Vector4(1, 1, 1, 1) : new Vector4(0, 0, 0, 0.2f);
+            });
+
+            BtnHandbook.onClick.AddListener(() =>
+            {
+                DialogManager.Instance.showInfo();
+            });
+
+            BtnFly.onClick.AddListener(() => 
+            {
+                DialogManager.Instance.showFloor();
+            });
+
+            BtnArchives.onClick.AddListener(() =>
+            {
+                DialogManager.Instance.showMenu();
+            });
+
+            BtnAudio.onClick.AddListener(() => 
+            {
+                AudioManager.Instance.voice();        
             });
         }
     }

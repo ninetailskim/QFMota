@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Rotorz.Tile;
+using QFramework;
 namespace Mota
 {
     public class TileManager : MonoBehaviour
@@ -9,14 +10,13 @@ namespace Mota
         public TileIndex otherTileIndex;
         public TileData otherTileData;
 
-        private ActionManager AM;
+        //private otherCommand AM;
         private GameManager GM;
         public Transform playerTransform;
 
         void Start()
         {
             GM = this.GetComponent<GameManager>();
-            AM = this.GetComponent<ActionManager>();
             tileSystem = GameObject.Find("Floor" + GM.CurrentFloor.Value).gameObject.GetComponent<TileSystem>();
         }
 
@@ -51,47 +51,53 @@ namespace Mota
             {
                 if (otherTileData.GetUserFlag(1))
                 {
-                    AM.talk(x, y, otherTileData);
+                    //AM.talk(x, y, otherTileData);
+                    otherTileData.gameObject.GetComponent<Talk>().Execute(x, y, otherTileData);
                     return false;
                 }
                 if (otherTileData.GetUserFlag(2))
                 {
-                    AM.daoju(x, y, otherTileData);
+                    otherTileData.gameObject.GetComponent<Daoju>().Execute(x, y, otherTileData);
+                    //AM.daoju(x, y, otherTileData);
                     return true;
                 }
                 if (otherTileData.GetUserFlag(3))
                 {
-                    AM.guaiwu(x, y, otherTileData);
+                    otherTileData.gameObject.GetComponent<Guaiwu>().Execute(x, y, otherTileData);
+                    //AM.guaiwu();
                     return false;
                 }
                 if (otherTileData.GetUserFlag(4))
                 {
-                    AM.door(x, y, otherTileData);
+                    //AM.door(x, y, otherTileData);
+                    otherTileData.gameObject.GetComponent<TRAnimation>().Execute(x, y, otherTileData);
                     return false;
                 }
                 if (otherTileData.GetUserFlag(5))
                 {
-                    AM.key(x, y, otherTileData);
+                    otherTileData.gameObject.GetComponent<Key>().Execute(x, y, otherTileData);
+                    //AM.key(x, y, otherTileData);
                     return true;
                 }
                 if (otherTileData.GetUserFlag(6))
                 {
-                    AM.stair(x, y, otherTileData);
+                    //AM.stair(x, y, otherTileData);
+                    otherTileData.gameObject.GetComponent<Stair>().Execute(x, y, otherTileData);
                     return false;
                 }
                 if (otherTileData.GetUserFlag(7))
                 {
-                    AM.tujian(x, y, otherTileData);
+                    otherCommand.tujian(x, y, otherTileData);
                     return true;
                 }
                 if (otherTileData.GetUserFlag(8))
                 {
-                    AM.feixing(x, y, otherTileData);
+                    otherCommand.feixing(x, y, otherTileData);
                     return true;
                 }
                 if (otherTileData.GetUserFlag(9))
                 {
-                    AM.boss(x, y, otherTileData);
+                    otherCommand.boss(x, y, otherTileData);
                     return true;
                 }
                 if (otherTileData.SolidFlag)
